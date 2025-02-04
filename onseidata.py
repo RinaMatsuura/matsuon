@@ -4,6 +4,14 @@ from openai import OpenAI
 import os
 import subprocess
 
+# ページ設定を行う
+st.set_page_config(
+    page_title="松浦の実験ページ",
+    page_icon="🧊",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
 def check_audio_format(file_path):
     """音声ファイルの形式をチェックし、必要に応じて変換する"""
     try:
