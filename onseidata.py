@@ -92,7 +92,7 @@ if uploaded_file is not None:
 
                     ## 出力形式
                     - 話者の区別は「話者名：」の形式で明示
-                    - 時系列順に会話を整理
+                    - 時系列順に会話ごとに改行し、整理
                     - 箇条書きで見やすく整形
                     """},
                     {"role": "user", "content": f"以下のテキストをまとめてください：\n{transcription.text}"}
