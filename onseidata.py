@@ -1,8 +1,8 @@
 import streamlit as st
 import tempfile
+from openai import OpenAI
 import os
 import subprocess
-import openai  # OpenAIを直接インポート
 
 def check_audio_format(file_path):
     """音声ファイルの形式をチェックし、必要に応じて変換する"""
@@ -23,7 +23,7 @@ def check_audio_format(file_path):
         st.error(f"音声ファイルの処理中にエラーが発生しました: {str(e)}")
         return None
 
-st.title("音声データテキスト化")  # ページタイトルを変更
+st.title("音声文字起こし 🎤")
 
 # ページ内で言語選択
 st.subheader("文字起こしの言語を選択")
@@ -50,9 +50,11 @@ if uploaded_file is not None:
             temp_file_path = temp_file.name
 
         try:
+            client = OpenAI()
+
             # Whisper APIを使用して文字起こし
             with open(temp_file_path, "rb") as audio_file:
-                transcription = openai.Audio.transcriptions.create(  # OpenAIのAPIを使用
+                transcription = client.audio.transcriptions.create(
                     model="whisper-1",
                     file=audio_file,
                     language=language_code[language],
@@ -61,7 +63,7 @@ if uploaded_file is not None:
 
             # GPT-4による要約と整理
             st.subheader("🔍 会話の分析")
-            response = openai.ChatCompletion.create(
+            response = client.chat.completions.create(
                 model="gpt-4-turbo-preview",
                 messages=[
                     {"role": "system", "content": """
@@ -85,7 +87,7 @@ if uploaded_file is not None:
                     - 時系列順に会話を整理
                     - 箇条書きで見やすく整形
                     """},
-                    {"role": "user", "content": f"以下のテキストをまとめてください：\n{transcription['text']}"}
+                    {"role": "user", "content": f"以下のテキストをまとめてください：\n{transcription.text}"}
                 ],
                 temperature=0,
                 max_tokens=4096,
@@ -94,9 +96,7 @@ if uploaded_file is not None:
                 frequency_penalty=0
             )
 
-            # 出力を整形して表示
-            formatted_response = response.choices[0].message.content.replace("\n", "<br>")  # 改行をHTMLの<br>に変換
-            st.markdown(formatted_response, unsafe_allow_html=True)  # HTMLを許可して表示
+            st.write(response.choices[0].message.content)
 
         except Exception as e:
             st.error(f"エラーが発生しました: {str(e)}")
