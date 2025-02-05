@@ -12,33 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-def check_audio_format(file_path):
-    """音声ファイルの形式をチェックし、必要に応じて変換・圧縮する"""
-    try:
-        # ffprobeでファイル情報を取得
-        cmd = ['ffprobe', '-i', file_path, '-show_entries', 'format=format_name', '-v', 'quiet', '-of', 'csv=p=0']
-        format_name = subprocess.check_output(cmd).decode('utf-8').strip()
-        
-        if format_name not in ['mp3', 'wav', 'm4a', 'mp4']:
-            # 変換が必要な場合
-            new_path = file_path + '.mp4'
-            convert_cmd = ['ffmpeg', '-i', file_path, '-c:a', 'aac', '-b:a', '128k', '-y', new_path]
-            subprocess.run(convert_cmd, check=True)
-            os.remove(file_path)
-            return new_path
-        
-        # 圧縮処理（ビットレートを128kに設定）
-        compressed_path = file_path.replace('.wav', '_compressed.wav')  # 圧縮ファイルのパス
-        compress_cmd = ['ffmpeg', '-i', file_path, '-b:a', '128k', '-y', compressed_path]
-        subprocess.run(compress_cmd, check=True)
-        os.remove(file_path)  # 元のファイルを削除
-        return compressed_path
-
-    except Exception as e:
-        st.error(f"音声ファイルの処理中にエラーが発生しました: {str(e)}")
-        return None
-
-def split_audio_file(file_path, chunk_length=300):
+def split_audio_file(file_path, chunk_length=60):
     """音声ファイルを指定した長さ（秒）で分割する"""
     try:
         # ffmpegを使用して音声ファイルを分割
