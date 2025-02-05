@@ -13,7 +13,7 @@ st.set_page_config(
 )
 
 # 最大ファイルサイズを設定
-st.set_option('server.maxUploadSize', 100)  # 100MBに設定
+# st.set_option('server.maxUploadSize', 100)  # 100MBに設定
 
 def check_audio_format(file_path):
     """音声ファイルの形式をチェックし、必要に応じて変換する"""
