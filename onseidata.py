@@ -12,6 +12,9 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# 最大ファイルサイズを設定
+st.set_option('server.maxUploadSize', 100)  # 100MBに設定
+
 def check_audio_format(file_path):
     """音声ファイルの形式をチェックし、必要に応じて変換する"""
     try:
@@ -31,7 +34,7 @@ def check_audio_format(file_path):
         st.error(f"音声ファイルの処理中にエラーが発生しました: {str(e)}")
         return None
 
-st.title("音声文字起こし 🎤 ※社内用")
+st.title("音声文字起こし 🎤")
 
 # ページ内で言語選択
 st.subheader("文字起こしの言語を選択")
@@ -92,7 +95,7 @@ if uploaded_file is not None:
 
                     ## 出力形式
                     - 話者の区別は「話者名：」の形式で明示
-                    - 時系列順に会話ごとに改行し、整理
+                    - 時系列順に会話を整理
                     - 箇条書きで見やすく整形
                     """},
                     {"role": "user", "content": f"以下のテキストをまとめてください：\n{transcription.text}"}
@@ -122,7 +125,7 @@ with st.expander("💡 使い方"):
     4. GPT-4による会話の分析結果が表示されます
     
     注意事項：
-    - ファイルサイズの上限は25MB
+    - ファイルサイズの上限は100MB
     - 対応フォーマット: MP3, M4A, WAV
     - 音声は明瞭なものを使用することで精度が向上します
     """)
