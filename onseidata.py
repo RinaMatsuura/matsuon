@@ -38,6 +38,20 @@ def check_audio_format(file_path):
         st.error(f"音声ファイルの処理中にエラーが発生しました: {str(e)}")
         return None
 
+def split_audio_file(file_path, chunk_length=300):
+    """音声ファイルを指定した長さ（秒）で分割する"""
+    try:
+        # ffmpegを使用して音声ファイルを分割
+        split_cmd = [
+            'ffmpeg', '-i', file_path, '-f', 'segment', '-segment_time', str(chunk_length),
+            '-c', 'copy', f"{file_path}_part%03d.mp4"
+        ]
+        subprocess.run(split_cmd, check=True)
+        return [f"{file_path}_part{str(i).zfill(3)}.mp4" for i in range(len(os.listdir('.')))]  # 分割されたファイルのリストを返す
+    except Exception as e:
+        st.error(f"音声ファイルの分割中にエラーが発生しました: {str(e)}")
+        return []
+
 st.title("音声文字起こし 🎤")
 
 # ページ内で言語選択
@@ -120,6 +134,9 @@ if uploaded_file is not None:
             # 一時ファイルの削除
             if os.path.exists(temp_file_path):
                 os.remove(temp_file_path)
+
+# 使用例
+split_files = split_audio_file(temp_file_path, chunk_length=60)  # 60秒ごとに分割
 
 # 使い方の説明を更新
 with st.expander("💡 使い方"):
