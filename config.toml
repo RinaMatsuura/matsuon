@@ -1,0 +1,10 @@
+# config.toml
+
+[server]
+headless = true  # ヘッドレスモードで実行
+port = 8501      # サーバーのポート番号
+maxUploadSize = 100  # 最大アップロードサイズを100MBに設定
+
+[theme]
+primaryColor = "#F39C12"  # プライマリカラー
+backgroundColor = "#FFFFFF"  # 背景色
