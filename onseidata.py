@@ -2,7 +2,7 @@ import streamlit as st
 import tempfile
 from openai import OpenAI
 import os
-import subprocess
+import ffmpeg  # ffmpeg-pythonをインポート
 
 # ページ設定を行う
 st.set_page_config(
@@ -16,12 +16,11 @@ def split_audio_file(file_path, chunk_length=60):
     """音声ファイルを指定した長さ（秒）で分割する"""
     try:
         # ffmpegを使用して音声ファイルを分割
-        split_cmd = [
-            'ffmpeg', '-i', file_path, '-f', 'segment', '-segment_time', str(chunk_length),
-            '-c', 'copy', f"{file_path}_part%03d.mp4"
-        ]
-        subprocess.run(split_cmd, check=True)
-        return [f"{file_path}_part{str(i).zfill(3)}.mp4" for i in range(len(os.listdir('.')))]  # 分割されたファイルのリストを返す
+        output_pattern = f"{file_path}_part%03d.mp4"
+        ffmpeg.input(file_path).output(output_pattern, f='segment', segment_time=chunk_length).run()
+        
+        # 分割されたファイルのリストを作成
+        return [output_pattern.replace('%03d', str(i).zfill(3)) for i in range(len(os.listdir('.')))]  # 分割されたファイルのリストを返す
     except Exception as e:
         st.error(f"音声ファイルの分割中にエラーが発生しました: {str(e)}")
         return []
