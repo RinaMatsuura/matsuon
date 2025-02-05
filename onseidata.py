@@ -100,15 +100,15 @@ if uploaded_file is not None:
                         language=language_code[language],
                         response_format="verbose_json"
                     )
-                    all_transcriptions.append(transcription['segments'])  # 各ファイルの文字起こし結果をリストに追加
+                    all_transcriptions.append(transcription.segments)  # 各ファイルの文字起こし結果をリストに追加
 
             # すべての文字起こし結果をフォーマットして表示
             st.write("### 会話ログ:")
-            for idx, segments in enumerate(all_transcriptions):
+            for segments in all_transcriptions:
                 for segment in segments:
                     start_time = segment['start']  # 発言の開始時間
                     text = segment['text']  # 発言内容
-                    speaker = "スピーカーA" if idx % 2 == 0 else "スピーカーB"  # スピーカーを交互に設定
+                    speaker = "スピーカーA" if segments.index(segment) % 2 == 0 else "スピーカーB"  # スピーカーを交互に設定
                     minutes = int(start_time // 60)
                     seconds = int(start_time % 60)
                     st.write(f"{speaker}({minutes}:{seconds:02d}): {text}")  # スピーカーとして表示
