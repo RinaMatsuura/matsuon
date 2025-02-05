@@ -10,4 +10,5 @@ mecab-python3
 unidic-lite
 openai>=1.0.0
 openpyxl
-pydub
+numpy
+scipy
