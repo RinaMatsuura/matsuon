@@ -2,7 +2,7 @@ import streamlit as st
 import tempfile
 from openai import OpenAI
 import os
-import ffmpeg  # ffmpeg-pythonをインポート
+from pydub import AudioSegment  # pydubをインポート
 
 # ページ設定を行う
 st.set_page_config(
@@ -15,12 +15,16 @@ st.set_page_config(
 def split_audio_file(file_path, chunk_length=60):
     """音声ファイルを指定した長さ（秒）で分割する"""
     try:
-        # ffmpegを使用して音声ファイルを分割
-        output_pattern = f"{file_path}_part%03d.mp4"
-        ffmpeg.input(file_path).output(output_pattern, f='segment', segment_time=chunk_length).run()
+        audio = AudioSegment.from_file(file_path)  # 音声ファイルを読み込む
+        split_files = []
         
-        # 分割されたファイルのリストを作成
-        return [output_pattern.replace('%03d', str(i).zfill(3)) for i in range(len(os.listdir('.')))]  # 分割されたファイルのリストを返す
+        for i in range(0, len(audio), chunk_length * 1000):  # ミリ秒単位で分割
+            chunk = audio[i:i + chunk_length * 1000]  # チャンクを取得
+            chunk_file_path = f"{file_path}_part{i // 1000}.mp3"  # 分割ファイルのパス
+            chunk.export(chunk_file_path, format="mp3")  # 分割ファイルをエクスポート
+            split_files.append(chunk_file_path)  # 分割ファイルのリストに追加
+        
+        return split_files  # 分割されたファイルのリストを返す
     except Exception as e:
         st.error(f"音声ファイルの分割中にエラーが発生しました: {str(e)}")
         return []
