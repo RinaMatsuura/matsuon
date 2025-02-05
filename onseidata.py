@@ -2,8 +2,7 @@ import streamlit as st
 import tempfile
 from openai import OpenAI
 import os
-import numpy as np
-from scipy.io import wavfile  # scipyをインポート
+from pydub import AudioSegment  # pydubをインポート
 
 # ページ設定を行う
 st.set_page_config(
@@ -16,18 +15,17 @@ st.set_page_config(
 def split_audio_file(file_path, chunk_length=60):
     """音声ファイルを指定した長さ（秒）で分割する"""
     try:
-        # WAVファイルを読み込む
-        sample_rate, data = wavfile.read(file_path)
+        # 音声ファイルを読み込む
+        audio = AudioSegment.from_file(file_path)  # pydubを使用して音声ファイルを読み込む
         
         # 分割されたファイルのリストを作成
         split_files = []
-        total_samples = len(data)
-        chunk_samples = chunk_length * sample_rate  # チャンクのサンプル数
+        total_length = len(audio)  # 音声の長さ（ミリ秒単位）
         
-        for i in range(0, total_samples, chunk_samples):
-            chunk = data[i:i + chunk_samples]  # チャンクを取得
-            chunk_file_path = f"{file_path}_part{i // sample_rate}.wav"  # 分割ファイルのパス
-            wavfile.write(chunk_file_path, sample_rate, chunk)  # 分割ファイルをエクスポート
+        for i in range(0, total_length, chunk_length * 1000):  # ミリ秒単位で分割
+            chunk = audio[i:i + chunk_length * 1000]  # チャンクを取得
+            chunk_file_path = f"{file_path}_part{i // 1000}.wav"  # 分割ファイルのパス
+            chunk.export(chunk_file_path, format="wav")  # 分割ファイルをエクスポート
             split_files.append(chunk_file_path)  # 分割ファイルのリストに追加
         
         return split_files  # 分割されたファイルのリストを返す
@@ -52,12 +50,12 @@ language_code = {
 }
 
 # ファイルアップローダーの追加
-uploaded_file = st.file_uploader("音声ファイルをアップロード", type=['wav'])
+uploaded_file = st.file_uploader("音声ファイルをアップロード", type=['mp3', 'm4a', 'wav'])
 
 if uploaded_file is not None:
     with st.spinner("文字起こしを実行中..."):
         # 一時ファイルとして保存
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_file:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=f".{uploaded_file.name.split('.')[-1]}") as temp_file:
             temp_file.write(uploaded_file.getvalue())
             temp_file_path = temp_file.name
 
@@ -127,13 +125,13 @@ if uploaded_file is not None:
 with st.expander("💡 使い方"):
     st.write("""
     1. ページ内で文字起こしの言語を選択
-    2. 音声ファイル（wav）をアップロード
+    2. 音声ファイル（mp3, m4a, wav）をアップロード
     3. 自動で文字起こしが開始されます
     4. GPT-4による会話の分析結果が表示されます
     
     注意事項：
     - ファイルサイズの上限は100MB
-    - 対応フォーマット: WAV
+    - 対応フォーマット: MP3, M4A, WAV
     - 音声は明瞭なものを使用することで精度が向上します
     """)
 
