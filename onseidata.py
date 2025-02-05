@@ -81,10 +81,10 @@ if uploaded_file is not None:
                     )
                     all_transcriptions.append(transcription.text)  # 各ファイルの文字起こし結果をリストに追加
 
-            # すべての文字起こし結果を連結して表示
-            combined_transcription = "\n".join(all_transcriptions)
-            st.write("### 文字起こし結果:")
-            st.write(combined_transcription)
+            # すべての文字起こし結果をフォーマットして表示
+            st.write("### 会話ログ:")
+            for idx, transcription in enumerate(all_transcriptions):
+                st.write(f"スピーカーA(分：秒)：{transcription}")  # スピーカーAとして表示（必要に応じて変更）
 
         except Exception as e:
             st.error(f"エラーが発生しました: {str(e)}")
