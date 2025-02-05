@@ -2,7 +2,8 @@ import streamlit as st
 import tempfile
 from openai import OpenAI
 import os
-from pydub import AudioSegment  # pydubをインポート
+import numpy as np
+import soundfile as sf  # soundfileをインポート
 
 # ページ設定を行う
 st.set_page_config(
@@ -16,16 +17,17 @@ def split_audio_file(file_path, chunk_length=60):
     """音声ファイルを指定した長さ（秒）で分割する"""
     try:
         # 音声ファイルを読み込む
-        audio = AudioSegment.from_file(file_path)  # pydubを使用して音声ファイルを読み込む
+        data, sample_rate = sf.read(file_path)  # soundfileを使用して音声ファイルを読み込む
         
         # 分割されたファイルのリストを作成
         split_files = []
-        total_length = len(audio)  # 音声の長さ（ミリ秒単位）
+        total_samples = len(data)
+        chunk_samples = chunk_length * sample_rate  # チャンクのサンプル数
         
-        for i in range(0, total_length, chunk_length * 1000):  # ミリ秒単位で分割
-            chunk = audio[i:i + chunk_length * 1000]  # チャンクを取得
-            chunk_file_path = f"{file_path}_part{i // 1000}.wav"  # 分割ファイルのパス
-            chunk.export(chunk_file_path, format="wav")  # 分割ファイルをエクスポート
+        for i in range(0, total_samples, chunk_samples):
+            chunk = data[i:i + chunk_samples]  # チャンクを取得
+            chunk_file_path = f"{file_path}_part{i // sample_rate}.wav"  # 分割ファイルのパス
+            sf.write(chunk_file_path, chunk, sample_rate)  # 分割ファイルをエクスポート
             split_files.append(chunk_file_path)  # 分割ファイルのリストに追加
         
         return split_files  # 分割されたファイルのリストを返す
