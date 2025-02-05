@@ -2,8 +2,7 @@ import streamlit as st
 import tempfile
 from openai import OpenAI
 import os
-import numpy as np
-import soundfile as sf  # soundfileをインポート
+import subprocess
 
 # ページ設定を行う
 st.set_page_config(
@@ -13,27 +12,31 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-def split_audio_file(file_path, chunk_length=60):
-    """音声ファイルを指定した長さ（秒）で分割する"""
+def check_audio_format(file_path):
+    """音声ファイルの形式をチェックし、必要に応じて変換・圧縮する"""
     try:
-        # 音声ファイルを読み込む
-        data, sample_rate = sf.read(file_path)  # soundfileを使用して音声ファイルを読み込む
+        # ffprobeでファイル情報を取得
+        cmd = ['ffprobe', '-i', file_path, '-show_entries', 'format=format_name', '-v', 'quiet', '-of', 'csv=p=0']
+        format_name = subprocess.check_output(cmd).decode('utf-8').strip()
         
-        # 分割されたファイルのリストを作成
-        split_files = []
-        total_samples = len(data)
-        chunk_samples = chunk_length * sample_rate  # チャンクのサンプル数
+        if format_name not in ['mp3', 'wav', 'm4a', 'mp4']:
+            # 変換が必要な場合
+            new_path = file_path + '.mp4'
+            convert_cmd = ['ffmpeg', '-i', file_path, '-c:a', 'aac', '-b:a', '128k', '-y', new_path]
+            subprocess.run(convert_cmd, check=True)
+            os.remove(file_path)
+            return new_path
         
-        for i in range(0, total_samples, chunk_samples):
-            chunk = data[i:i + chunk_samples]  # チャンクを取得
-            chunk_file_path = f"{file_path}_part{i // sample_rate}.wav"  # 分割ファイルのパス
-            sf.write(chunk_file_path, chunk, sample_rate)  # 分割ファイルをエクスポート
-            split_files.append(chunk_file_path)  # 分割ファイルのリストに追加
-        
-        return split_files  # 分割されたファイルのリストを返す
+        # 圧縮処理（ビットレートを128kに設定）
+        compressed_path = file_path.replace('.wav', '_compressed.wav')  # 圧縮ファイルのパス
+        compress_cmd = ['ffmpeg', '-i', file_path, '-b:a', '128k', '-y', compressed_path]
+        subprocess.run(compress_cmd, check=True)
+        os.remove(file_path)  # 元のファイルを削除
+        return compressed_path
+
     except Exception as e:
-        st.error(f"音声ファイルの分割中にエラーが発生しました: {str(e)}")
-        return []
+        st.error(f"音声ファイルの処理中にエラーが発生しました: {str(e)}")
+        return None
 
 st.title("音声文字起こし 🎤")
 
@@ -64,22 +67,17 @@ if uploaded_file is not None:
         try:
             client = OpenAI()
 
-            # 音声ファイルを分割
-            split_files = split_audio_file(temp_file_path, chunk_length=60)  # 60秒ごとに分割
-
             # Whisper APIを使用して文字起こし
-            st.subheader("🔍 会話の分析")
-            for split_file in split_files:
-                with open(split_file, "rb") as audio_file:
-                    transcription = client.audio.transcriptions.create(
-                        model="whisper-1",
-                        file=audio_file,
-                        language=language_code[language],
-                        response_format="verbose_json"
-                    )
-                    # ここでtranscriptionを使ってGPT-4に送信する処理を追加することができます
+            with open(temp_file_path, "rb") as audio_file:
+                transcription = client.audio.transcriptions.create(
+                    model="whisper-1",
+                    file=audio_file,
+                    language=language_code[language],
+                    response_format="verbose_json"
+                )
 
-            # GPT-4による要約処理を追加
+            # GPT-4による要約と整理
+            st.subheader("🔍 会話の分析")
             response = client.chat.completions.create(
                 model="gpt-4-turbo-preview",
                 messages=[
