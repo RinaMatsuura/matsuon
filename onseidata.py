@@ -81,10 +81,10 @@ if uploaded_file is not None:
                     )
                     all_transcriptions.append(transcription.text)  # 各ファイルの文字起こし結果をリストに追加
 
-            # すべての文字起こし結果を表示
-            for idx, transcription in enumerate(all_transcriptions):
-                st.write(f"### 分割ファイル {idx + 1} の文字起こし結果:")
-                st.write(transcription)
+            # すべての文字起こし結果を連結して表示
+            combined_transcription = "\n".join(all_transcriptions)
+            st.write("### 文字起こし結果:")
+            st.write(combined_transcription)
 
         except Exception as e:
             st.error(f"エラーが発生しました: {str(e)}")
@@ -111,3 +111,27 @@ with st.expander("💡 使い方"):
 st.sidebar.markdown("---")
 st.sidebar.write("バージョン: 1.0.0")
 st.sidebar.write("© 2024 まつりな")
+
+# プロンプト
+prompt = """
+あなたは会話文の整理と文字起こしの専門家です。以下の指示に従って会話を整理してください：
+
+## 必須タスク
+1. 複数の話者の発言を明確に区別し、全ての音声を漏れなく全て記載してください
+2. 会話が発生した時間（分：秒）を発話ごとに記載してください
+2. 以下のフォーマットで出力してください：
+
+### サマリー
+- 会話の要約
+- 次のアクション項目
+
+### 会話ログ
+スピーカーA(分：秒)：発言内容
+スピーカーB(分：秒)：発言内容
+（時系列順）
+
+## 出力形式
+- 話者の区別は「話者名：」の形式で明示
+- 時系列順に会話を記載
+- 箇条書きで見やすく整形
+"""
