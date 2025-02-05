@@ -55,19 +55,10 @@ if uploaded_file is not None:
         try:
             client = OpenAI()
 
-            # Whisper APIを使用して文字起こし
-            with open(temp_file_path, "rb") as audio_file:
-                transcription = client.audio.transcriptions.create(
-                    model="whisper-1",
-                    file=audio_file,
-                    language=language_code[language],
-                    response_format="verbose_json"
-                )
-
             # 音声ファイルを分割
             split_files = split_audio_file(temp_file_path, chunk_length=60)  # 60秒ごとに分割
 
-            # GPT-4による要約と整理
+            # Whisper APIを使用して文字起こし
             st.subheader("🔍 会話の分析")
             for split_file in split_files:
                 with open(split_file, "rb") as audio_file:
@@ -122,9 +113,6 @@ if uploaded_file is not None:
             # 一時ファイルの削除
             if os.path.exists(temp_file_path):
                 os.remove(temp_file_path)
-
-# 使用例
-split_files = split_audio_file(temp_file_path, chunk_length=60)  # 60秒ごとに分割
 
 # 使い方の説明を更新
 with st.expander("💡 使い方"):
