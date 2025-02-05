@@ -56,9 +56,10 @@ prompt = """
 あなたは会話文の整理と文字起こしの専門家です。以下の指示に従って会話を整理してください：
 
 ## 必須タスク
-1. 複数の話者の発言を漏れなく細かく明確に区別し、全ての音声を漏れなく全て記載してください
-2. 会話が発生した時間（分：秒）を話者ごとに記載してください
-3. 以下のフォーマットで出力してください：
+1. 複数の話者の発言を明確に区別して記載してください
+2. 全ての音声を漏れなく全て記載してください
+3. 会話が発生した時間（分：秒）を発話ごとに記載してください
+4. 以下のフォーマットで出力してください：
 
 ### 会話ログ
 スピーカーA(分：秒)：発言内容
@@ -109,7 +110,8 @@ if uploaded_file is not None:
                 start_time = idx * 60  # 各ファイルの開始時間（秒）
                 minutes = start_time // 60
                 seconds = start_time % 60
-                st.write(f"スピーカーA({minutes}:{seconds:02d}): {transcription}")  # スピーカーAとして表示（必要に応じて変更）
+                speaker = "スピーカーA" if idx % 2 == 0 else "スピーカーB"  # スピーカーを交互に設定
+                st.write(f"{speaker}({minutes}:{seconds:02d}): {transcription}")  # スピーカーとして表示
 
         except Exception as e:
             st.error(f"エラーが発生しました: {str(e)}")
@@ -136,3 +138,4 @@ with st.expander("💡 使い方"):
 st.sidebar.markdown("---")
 st.sidebar.write("バージョン: 1.0.0")
 st.sidebar.write("© 2024 まつりな")
+
