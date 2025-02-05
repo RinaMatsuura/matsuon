@@ -64,8 +64,22 @@ if uploaded_file is not None:
                     response_format="verbose_json"
                 )
 
+            # 音声ファイルを分割
+            split_files = split_audio_file(temp_file_path, chunk_length=60)  # 60秒ごとに分割
+
             # GPT-4による要約と整理
             st.subheader("🔍 会話の分析")
+            for split_file in split_files:
+                with open(split_file, "rb") as audio_file:
+                    transcription = client.audio.transcriptions.create(
+                        model="whisper-1",
+                        file=audio_file,
+                        language=language_code[language],
+                        response_format="verbose_json"
+                    )
+                    # ここでtranscriptionを使ってGPT-4に送信する処理を追加することができます
+
+            # GPT-4による要約処理を追加
             response = client.chat.completions.create(
                 model="gpt-4-turbo-preview",
                 messages=[
